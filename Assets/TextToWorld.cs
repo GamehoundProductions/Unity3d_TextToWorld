@@ -1,32 +1,36 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-
-public class NumberSprites: MonoBehaviour {
+/// <summary>
+///  This script lets you render text\font in a form of Sprite to the World space
+/// based on the input string. It is particularly useful when you need to display
+/// text in the world space that changes during the runtime.
+/// </summary>
+public class TextToWorld: MonoBehaviour {
 
     protected Vector2 AlphabetUCaseRange   = new Vector2(65, 90);
     protected Vector2 SpecialCharRange     = new Vector2(32, 47);
 
     [Tooltip("Element in the array represents the a number sprite.")]
     public Sprite[] Numbers;
-    [Tooltip("Upper Case alphabet. Element 0 is A, which is = (65(hex val) - 65). B = 66 - 65.")]
+    [Tooltip("Upper Case alphabet. Hex range from 65 to 90. where 65 is element 0 of the array.")]
     public Sprite[] AlphabetU;
+    [Tooltip("Special Characters sprites. Hex range from 32 to 47. where 32 is element 0 of the array.")]
     public Sprite[] SpecialChars;
+    [Tooltip("Space between letters.")]
     public float    LetterSpacing = 0.1f;
+    [Tooltip("SpriteRenderer 'Sorting layer'.")]
     public string   SortingLayerName;
+    [Tooltip("SpriteRenderer 'Order in layer'.")]
     public int      OrderInLayer;
     [Tooltip("'Pixel Per Unit' value used on the sprite itself.")]
     public int      PixelPerUnit = 100;
-    public string   TextToRender = "1";
+    [Tooltip("Text to be rendered in the world space using Sprite arrays.")]
+    public string   TextToRender = "Hello World";
+    [Tooltip("Scale for each letter.")]
     public Vector3  Scale = Vector3.one;
-    [Tooltip("Allow runtime text rendering by listening to the keyboard inputs.")]
-
-    public bool     AllowKeyboardInput = false;
-    public float    currBackspaceDelay;
-
 
     private List<SpriteRenderer> textToRender;
-    private bool bIsBackspaceDown;
 
 
     public void Start() {
@@ -37,57 +41,9 @@ public class NumberSprites: MonoBehaviour {
     }//Start
 
 
-    public void Update() {
-        if(AllowKeyboardInput)
-            HandleKeyboardInput();
-    }//Update
-
-
-    public void HandleKeyboardInput() {
-        foreach (KeyCode kcode in System.Enum.GetValues(typeof(KeyCode))) {
-            if (!Input.GetKeyDown(kcode) || Input.GetKeyDown(KeyCode.Backspace))
-                continue;
-
-            char letter = kcode.ToString()[0];
-            if (kcode.ToString() == "Space")
-                letter = ' ';
-
-            if (kcode.ToString().Length > 1 && kcode != KeyCode.Space) {
-                if (kcode.ToString().Contains("Alpha"))
-                    letter = kcode.ToString()[5];
-                else
-                    continue;
-            }//if
-
-            bool isCharAdded = AddCharacter(letter);
-            if (!isCharAdded)
-                continue;
-
-            TextToRender += letter; //FOR DEBUGGING
-            RenderText();
-        }//foreach
-
-        if (Input.GetKeyDown(KeyCode.Backspace))
-            bIsBackspaceDown = true;
-        if (Input.GetKeyUp(KeyCode.Backspace)) {
-            bIsBackspaceDown = false;
-            currBackspaceDelay = 0;
-        }
-
-        if (bIsBackspaceDown && currBackspaceDelay == 0) {
-            bool wasCharRemoved = RemoveLetter();
-            if (wasCharRemoved) {
-                RenderText();
-                TextToRender = TextToRender.Remove(TextToRender.Length - 1);
-            }//if
-        }//if
-
-        if (bIsBackspaceDown) {
-            currBackspaceDelay = (currBackspaceDelay >= 0.05f) ? 0 : currBackspaceDelay + Time.deltaTime;
-        }
-    }//HandleKeyboardInput
-
-
+    /// <summary>
+    ///  
+    /// </summary>
     public void RenderText() {
         Vector2 prevLetterPos = Vector3.zero;
         Vector2 prevLetterSize = Vector3.zero;
@@ -153,26 +109,6 @@ public class NumberSprites: MonoBehaviour {
     }//BuildText
 
 
-    /// <summary>
-    ///  Check if symbol is between hex values of 32 and 47 (both inclusive).
-    /// This is a special character range, based of: http://www.asciitable.com/
-    /// </summary>
-    public bool IsSpecialChar(char symbol) {
-        int hexIndex = symbol;
-        return hexIndex >= SpecialCharRange.x && hexIndex <= SpecialCharRange.y;
-    }//IsSpecialChar
-
-
-    /// <summary>
-    ///  Check if between hex value of 65 and 90 (both inclusive) which
-    ///  represent the Upper Case alphabetic characters: http://www.asciitable.com/
-    /// </summary>
-    public bool IsUpperLetter(char symbol) {
-        int hexIndex = symbol;
-        return hexIndex >= AlphabetUCaseRange.x && hexIndex <= AlphabetUCaseRange.y;
-    }//IsUpperLetter
-
-
     protected SpriteRenderer CreateLetter(int index, ref Sprite[] letterSprites) {
         bool isValidNumber = this.validateArrayIndex(index, ref letterSprites);
         if (!isValidNumber)
@@ -222,6 +158,17 @@ public class NumberSprites: MonoBehaviour {
     }//RemoveLetter
 
 
+    /// <summary>
+    ///  Validates array for out of bounds and for null sprite
+    /// at the index's position. I just want a slightly more
+    /// readable message to be displayed with less panic when
+    /// things go wrong...
+    /// </summary>
+    /// <param name="index">Index of the array to validate.</param>
+    /// <param name="target">Array to validate on.</param>
+    /// <returns>True if everything is good. 
+    ///          False - something went wrong.
+    /// </returns>
     protected bool validateArrayIndex(int index, ref Sprite[] target) {
         if(target.Length == 0) {
             #if UNITY_EDITOR
@@ -246,5 +193,26 @@ public class NumberSprites: MonoBehaviour {
 
         return true;
     }//validateArrayIndex
+
+
+    /// <summary>
+    ///  Check if symbol is between hex values of 32 and 47 (both inclusive).
+    /// This is a special character range, based of: http://www.asciitable.com/
+    /// </summary>
+    public bool IsSpecialChar(char symbol) {
+        int hexIndex = symbol;
+        return hexIndex >= SpecialCharRange.x && hexIndex <= SpecialCharRange.y;
+    }//IsSpecialChar
+
+
+    /// <summary>
+    ///  Check if between hex value of 65 and 90 (both inclusive) which
+    ///  represent the Upper Case alphabetic characters: http://www.asciitable.com/
+    /// </summary>
+    public bool IsUpperLetter(char symbol) {
+        int hexIndex = symbol;
+        return hexIndex >= AlphabetUCaseRange.x && hexIndex <= AlphabetUCaseRange.y;
+    }//IsUpperLetter
+
 
 }//class
